@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Scroll Frame Animation</title>
+
+<style>
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  body {
+    height: 300vh; /* controls scroll length */
+    background: black;
+  }
+
+  canvas {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100vh;
+    object-fit: cover;
+  }
+</style>
+</head>
+<body>
+<div id="hero">
+<canvas id="canvas"></canvas>
+</div>
+<script>
+const canvas = document.getElementById("canvas");
+const context = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+// Detect device
+const isMobile = window.innerWidth < 768;
+
+// Config
+const frameCount = isMobile ? 91 : 161;
+const folder = isMobile ? "phoneversion" : "pcframs";
+
+// Generate frame path
+const currentFrame = index => 
+  `${folder}/ezgif-frame-${String(index).padStart(3, '0')}.jpg`;
+
+// Preload images
+const images = [];
+const imageSeq = {
+  frame: 1
+};
+
+for (let i = 1; i <= frameCount; i++) {
+  const img = new Image();
+  img.src = currentFrame(i);
+  images.push(img);
+}
+
+// Draw image function
+function drawImage(img) {
+  const canvasRatio = canvas.width / canvas.height;
+  const imgRatio = img.width / img.height;
+
+  let drawWidth, drawHeight;
+
+  if (canvasRatio > imgRatio) {
+    drawWidth = canvas.width;
+    drawHeight = canvas.width / imgRatio;
+  } else {
+    drawHeight = canvas.height;
+    drawWidth = canvas.height * imgRatio;
+  }
+
+  const x = (canvas.width - drawWidth) / 2;
+  const y = (canvas.height - drawHeight) / 2;
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(img, x, y, drawWidth, drawHeight);
+}
+
+// Initial frame
+images[0].onload = () => {
+  drawImage(images[0]);
+};
+
+// Scroll animation
+window.addEventListener("scroll", () => {
+  const scrollTop = window.scrollY;
+  const maxScroll = document.body.scrollHeight - window.innerHeight;
+
+  const scrollFraction = scrollTop / maxScroll;
+  const frameIndex = Math.min(
+    frameCount - 1,
+    Math.floor(scrollFraction * frameCount)
+  );
+
+  requestAnimationFrame(() => {
+    drawImage(images[frameIndex]);
+  });
+});
+
+// Resize fix
+window.addEventListener("resize", () => {
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  drawImage(images[imageSeq.frame]);
+});
+</script>
+
+</body>
+</html>
